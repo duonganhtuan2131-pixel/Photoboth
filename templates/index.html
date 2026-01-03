@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Photobook Studio</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#FF7E5F",
+                        secondary: "#FEB47B",
+                        "background-light": "#F3F4F6",
+                        "background-dark": "#111827",
+                        "card-light": "#FFFFFF",
+                        "card-dark": "#1F2937",
+                        "text-light": "#1F2937",
+                        "text-dark": "#F9FAFB",
+                        "border-light": "#E5E7EB",
+                        "border-dark": "#374151",
+                    },
+                    fontFamily: {
+                        display: ["Inter", "sans-serif"],
+                    },
+                },
+            },
+        };
+    </script>
+    <style>
+        .btn-gradient {
+            background: linear-gradient(90deg, #FF7E5F 0%, #FEB47B 100%);
+            transition: all 0.3s ease;
+        }
+
+        .btn-gradient:hover {
+            background: linear-gradient(90deg, #FF6A45 0%, #FEA05A 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -10px rgba(255, 126, 95, 0.5);
+        }
+
+        .camera-overlay {
+            border: 2px dashed rgba(255, 255, 255, 0.5);
+        }
+
+        #video {
+            transform: scaleX(-1);
+            /* Mirror view for camera */
+        }
+    </style>
+</head>
+
+<body
+    class="bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark font-display min-h-screen flex items-center justify-center p-4 transition-colors duration-300">
+
+    <main
+        class="w-full max-w-lg bg-card-light dark:bg-card-dark rounded-2xl shadow-2xl overflow-hidden border border-border-light dark:border-border-dark transition-colors duration-300">
+        <header class="p-6 pb-2 text-center">
+            <h1 class="text-3xl font-bold text-gray-800 dark:text-white mb-1 tracking-tight">Photobook Studio</h1>
+            <p class="text-sm text-gray-500 dark:text-gray-400 font-medium">Lưu giữ khoảnh khắc tức thì</p>
+        </header>
+
+        <div class="p-6 space-y-6">
+            <!-- Camera Selection -->
+            <div class="space-y-2">
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300" for="videoSource">
+                    Chọn Thiết Bị Camera:
+                </label>
+                <div class="flex gap-2">
+                    <div class="relative flex-grow">
+                        <select id="videoSource"
+                            class="block w-full pl-3 pr-10 py-3 text-base border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm transition-colors cursor-pointer appearance-none">
+                            <!-- Options filled by JS -->
+                        </select>
+                        <div
+                            class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+                            <span class="material-icons-round">expand_more</span>
+                        </div>
+                    </div>
+                    <button onclick="getDevices()"
+                        class="p-3 bg-gray-100 dark:bg-gray-700 rounded-lg text-gray-500 hover:text-primary transition-colors"
+                        title="Làm mới danh sách camera">
+                        <span class="material-icons-round">refresh</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Viewfinder -->
+            <div
+                class="relative w-full aspect-[4/3] bg-black rounded-xl overflow-hidden shadow-inner group border-4 border-primary/20 dark:border-primary/40">
+                <video id="video" autoplay playsinline muted class="w-full h-full object-cover"></video>
+
+                <!-- Overlay Frame -->
+                <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div class="w-4/5 h-4/5 camera-overlay rounded-lg relative z-10">
+                        <div class="absolute top-0 left-0 w-6 h-6 border-t-4 border-l-4 border-primary/60 -mt-1 -ml-1">
+                        </div>
+                        <div class="absolute top-0 right-0 w-6 h-6 border-t-4 border-r-4 border-primary/60 -mt-1 -mr-1">
+                        </div>
+                        <div
+                            class="absolute bottom-0 left-0 w-6 h-6 border-b-4 border-l-4 border-primary/60 -mb-1 -ml-1">
+                        </div>
+                        <div
+                            class="absolute bottom-0 right-0 w-6 h-6 border-b-4 border-r-4 border-primary/60 -mb-1 -mr-1">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Status Badge -->
+                <div
+                    class="absolute top-4 right-4 flex items-center gap-2 bg-black/50 backdrop-blur-sm px-3 py-1 rounded-full border border-white/10">
+                    <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                    <span class="text-[10px] font-bold text-white tracking-widest">LIVE</span>
+                </div>
+            </div>
+
+            <!-- Effect Selection -->
+            <div class="flex flex-wrap justify-center gap-2 py-2">
+                <button onclick="setEffect('none')"
+                    class="effect-btn active px-3 py-1.5 rounded-full border text-[10px] font-bold uppercase tracking-wider transition-all border-primary text-primary"
+                    data-effect="none">Gốc</button>
+                <button onclick="setEffect('grayscale(100%)')"
+                    class="effect-btn px-3 py-1.5 rounded-full border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 text-[10px] font-bold uppercase tracking-wider transition-all"
+                    data-effect="bw">Trắng đen</button>
+                <button onclick="setEffect('sepia(80%) brightness(90%) contrast(110%)')"
+                    class="effect-btn px-3 py-1.5 rounded-full border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 text-[10px] font-bold uppercase tracking-wider transition-all"
+                    data-effect="vintage">Vintage</button>
+                <button onclick="setEffect('saturate(180%) contrast(110%)')"
+                    class="effect-btn px-3 py-1.5 rounded-full border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 text-[10px] font-bold uppercase tracking-wider transition-all"
+                    data-effect="vivid">Tươi tắn</button>
+                <button onclick="setEffect('saturate(70%) hue-rotate(20deg) brightness(110%)')"
+                    class="effect-btn px-3 py-1.5 rounded-full border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 text-[10px] font-bold uppercase tracking-wider transition-all"
+                    data-effect="cold">Lạnh</button>
+            </div>
+
+            <!-- Sticker Decoration Selection Bar -->
+            <div class="space-y-3 px-1">
+                <label
+                    class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest text-center">Trang
+                    trí Sticker (Icon)</label>
+                <div class="flex overflow-x-auto pb-2 gap-3 no-scrollbar snap-x">
+                    <button id="sticker-none" onclick="setSticker('none')"
+                        class="sticker-btn active flex-shrink-0 snap-start flex flex-col items-center gap-2 p-3 min-w-[70px] rounded-2xl border-2 border-primary bg-primary/5 text-primary transition-all duration-300">
+                        <span class="material-icons-round text-2xl">block</span>
+                        <span class="text-[9px] font-bold uppercase">Tắt</span>
+                    </button>
+                    <button id="sticker-hearts" onclick="setSticker('hearts')"
+                        class="sticker-btn flex-shrink-0 snap-start flex flex-col items-center gap-2 p-3 min-w-[70px] rounded-2xl border-2 border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800 text-gray-400 transition-all duration-300">
+                        <span class="text-2xl">❤️</span>
+                        <span class="text-[9px] font-bold uppercase">Love</span>
+                    </button>
+                    <button id="sticker-animals" onclick="setSticker('animals')"
+                        class="sticker-btn flex-shrink-0 snap-start flex flex-col items-center gap-2 p-3 min-w-[70px] rounded-2xl border-2 border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800 text-gray-400 transition-all duration-300">
+                        <span class="text-2xl">🐥</span>
+                        <span class="text-[9px] font-bold uppercase">Pet</span>
+                    </button>
+                    <button id="sticker-sparkles" onclick="setSticker('sparkles')"
+                        class="sticker-btn flex-shrink-0 snap-start flex flex-col items-center gap-2 p-3 min-w-[70px] rounded-2xl border-2 border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800 text-gray-400 transition-all duration-300">
+                        <span class="text-2xl">✨</span>
+                        <span class="text-[9px] font-bold uppercase">Star</span>
+                    </button>
+                    <button id="sticker-weather" onclick="setSticker('weather')"
+                        class="sticker-btn flex-shrink-0 snap-start flex flex-col items-center gap-2 p-3 min-w-[70px] rounded-2xl border-2 border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800 text-gray-400 transition-all duration-300">
+                        <span class="text-2xl">☀️</span>
+                        <span class="text-[9px] font-bold uppercase">Sun</span>
+                    </button>
+                    <button id="sticker-food" onclick="setSticker('food')"
+                        class="sticker-btn flex-shrink-0 snap-start flex flex-col items-center gap-2 p-3 min-w-[70px] rounded-2xl border-2 border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800 text-gray-400 transition-all duration-300">
+                        <span class="text-2xl">🍦</span>
+                        <span class="text-[9px] font-bold uppercase">Food</span>
+                    </button>
+                </div>
+            </div>
+
+            <style>
+                .no-scrollbar::-webkit-scrollbar {
+                    display: none;
+                }
+
+                .no-scrollbar {
+                    -ms-overflow-style: none;
+                    scrollbar-width: none;
+                }
+            </style>
+
+            <!-- Frame Selection -->
+            <div class="space-y-3 px-1">
+                <label
+                    class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest text-center">Thiết
+                    kế dải phim (Màu Khung)</label>
+                <div class="grid grid-cols-4 gap-2">
+                    <button id="frame-white" onclick="setFrame('white')"
+                        class="frame-btn active flex flex-col items-center gap-1 p-2 rounded-xl border border-primary text-primary transition-all bg-primary/5"
+                        data-frame="white">
+                        <span class="material-icons-round text-lg">square</span>
+                        <span class="text-[9px] font-bold uppercase">Classic</span>
+                    </button>
+                    <button id="frame-cartoon" onclick="setFrame('cartoon')"
+                        class="frame-btn flex flex-col items-center gap-1 p-2 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-500 transition-all"
+                        data-frame="cartoon">
+                        <span class="material-icons-round text-lg">auto_fix_normal</span>
+                        <span class="text-[9px] font-bold uppercase">Cartoon</span>
+                    </button>
+                    <button id="frame-cute" onclick="setFrame('cute')"
+                        class="frame-btn flex flex-col items-center gap-1 p-2 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-500 transition-all"
+                        data-frame="cute">
+                        <span class="material-icons-round text-lg">favorite</span>
+                        <span class="text-[9px] font-bold uppercase">Cute</span>
+                    </button>
+                    <button id="frame-kstyle" onclick="setFrame('kstyle')"
+                        class="frame-btn flex flex-col items-center gap-1 p-2 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-500 transition-all"
+                        data-frame="kstyle">
+                        <span class="material-icons-round text-lg">palette</span>
+                        <span class="text-[9px] font-bold uppercase">K-Style</span>
+                    </button>
+                    <button id="frame-retro" onclick="setFrame('retro')"
+                        class="frame-btn flex flex-col items-center gap-1 p-2 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-500 transition-all"
+                        data-frame="retro">
+                        <span class="material-icons-round text-lg">confirmation_number</span>
+                        <span class="text-[9px] font-bold uppercase">Retro</span>
+                    </button>
+                    <button id="frame-party" onclick="setFrame('party')"
+                        class="frame-btn flex flex-col items-center gap-1 p-2 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-500 transition-all"
+                        data-frame="party">
+                        <span class="material-icons-round text-lg">celebration</span>
+                        <span class="text-[9px] font-bold uppercase">Party</span>
+                    </button>
+                    <button id="frame-dark" onclick="setFrame('dark')"
+                        class="frame-btn flex flex-col items-center gap-1 p-2 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-500 transition-all"
+                        data-frame="dark">
+                        <span class="material-icons-round text-lg">nightlight</span>
+                        <span class="text-[9px] font-bold uppercase">Dark</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Photostrip Settings -->
+            <div class="space-y-4">
+                <div class="flex items-center justify-between px-2">
+                    <h3
+                        class="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                        <span class="material-icons-round text-primary text-xs">settings</span>
+                        Cấu hình Photostrip
+                    </h3>
+                </div>
+
+                <!-- Chon So Luong Anh -->
+                <div class="bg-gray-50 dark:bg-gray-800/30 p-3 rounded-2xl border border-gray-100 dark:border-gray-800">
+                    <label
+                        class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 text-center">Bước
+                        1: Chọn tổng số ảnh</label>
+                    <div class="flex flex-wrap justify-center gap-2">
+                        <button onclick="changeTotalSlots(4)" id="slot-count-4"
+                            class="slot-count-btn flex flex-col items-center gap-1 px-4 py-2 rounded-xl border-2 border-gray-100 dark:border-gray-800 text-gray-400 transition-all">
+                            <span class="text-lg font-bold">4</span>
+                            <span class="text-[8px] uppercase">Ảnh</span>
+                        </button>
+                        <button onclick="changeTotalSlots(6)" id="slot-count-6"
+                            class="slot-count-btn flex flex-col items-center gap-1 px-4 py-2 rounded-xl border-2 border-primary bg-primary/5 text-primary transition-all">
+                            <span class="text-lg font-bold">6</span>
+                            <span class="text-[8px] uppercase">Ảnh</span>
+                        </button>
+                        <button onclick="changeTotalSlots(8)" id="slot-count-8"
+                            class="slot-count-btn flex flex-col items-center gap-1 px-4 py-2 rounded-xl border-2 border-gray-100 dark:border-gray-800 text-gray-400 transition-all">
+                            <span class="text-lg font-bold">8</span>
+                            <span class="text-[8px] uppercase">Ảnh</span>
+                        </button>
+                        <button onclick="changeTotalSlots(12)" id="slot-count-12"
+                            class="slot-count-btn flex flex-col items-center gap-1 px-4 py-2 rounded-xl border-2 border-gray-100 dark:border-gray-800 text-gray-400 transition-all">
+                            <span class="text-lg font-bold">12</span>
+                            <span class="text-[8px] uppercase">Ảnh</span>
+                        </button>
+                        <button onclick="changeTotalSlots(18)" id="slot-count-18"
+                            class="slot-count-btn flex flex-col items-center gap-1 px-4 py-2 rounded-xl border-2 border-gray-100 dark:border-gray-800 text-gray-400 transition-all">
+                            <span class="text-lg font-bold">18</span>
+                            <span class="text-[8px] uppercase">Ảnh</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Chon So Cot -->
+                <div
+                    class="bg-white dark:bg-gray-900/50 p-3 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700">
+                    <label
+                        class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 text-center">Bước
+                        2: Chọn số cột hiển thị</label>
+                    <div class="flex justify-center gap-3">
+                        <button onclick="changeCols(1)" id="col-count-1"
+                            class="col-btn flex-1 py-3 rounded-xl border-2 border-gray-100 dark:border-gray-800 text-gray-400 font-bold text-[10px] uppercase transition-all">1
+                            Cột (Dọc)</button>
+                        <button onclick="changeCols(2)" id="col-count-2"
+                            class="col-btn active flex-1 py-3 rounded-xl border-2 border-primary bg-primary/5 text-primary font-bold text-[10px] uppercase transition-all">2
+                            Cột</button>
+                        <button onclick="changeCols(3)" id="col-count-3"
+                            class="col-btn flex-1 py-3 rounded-xl border-2 border-gray-100 dark:border-gray-800 text-gray-400 font-bold text-[10px] uppercase transition-all">3
+                            Cột</button>
+                    </div>
+                </div>
+
+                <!-- Tu viet chu -->
+                <div class="bg-gray-50 dark:bg-gray-800/30 p-4 rounded-2xl border border-gray-100 dark:border-gray-800">
+                    <label
+                        class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 text-center">Bước
+                        3: Lời nhắn của bạn</label>
+                    <div class="relative">
+                        <input type="text" id="customFooterText" maxlength="30" placeholder="Nhập lời nhắn tại đây..."
+                            class="w-full px-4 py-3 rounded-xl border-2 border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm focus:border-primary focus:outline-none transition-all dark:text-white"
+                            oninput="updatePreviewIfOpen()">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Control Buttons -->
+            <div class="flex flex-col sm:flex-row justify-center items-center gap-4 pt-2">
+                <button onclick="takePhoto()"
+                    class="btn-gradient relative flex items-center justify-center gap-3 px-8 py-4 rounded-full text-white font-bold shadow-lg group focus:outline-none focus:ring-4 focus:ring-primary/30 active:scale-95 transition-all w-full sm:w-auto">
+                    <span
+                        class="material-icons-round text-2xl group-hover:rotate-12 transition-transform">photo_camera</span>
+                    <span class="uppercase tracking-wider">Chụp ảnh ngay</span>
+                </button>
+
+                <button id="stopBtn" onclick="stopCamera()"
+                    class="flex items-center justify-center gap-2 px-8 py-4 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-bold shadow-md hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none active:scale-95 transition-all w-full sm:w-auto">
+                    <span class="material-icons-round text-xl">videocam_off</span>
+                    <span class="uppercase tracking-wider">Dừng Camera</span>
+                </button>
+
+                <button id="startBtn" onclick="initCamera(videoSelect.value)"
+                    class="hidden flex items-center justify-center gap-2 px-8 py-4 rounded-full bg-green-500 text-white font-bold shadow-md hover:bg-green-600 focus:outline-none active:scale-95 transition-all w-full sm:w-auto">
+                    <span class="material-icons-round text-xl">videocam</span>
+                    <span class="uppercase tracking-wider">Mở Camera</span>
+                </button>
+            </div>
+
+            <div class="border-t border-border-light dark:border-border-dark my-6"></div>
+
+            <!-- Results Section -->
+            <div class="space-y-4 pb-4">
+                <div class="flex items-center justify-between px-2">
+                    <h3
+                        class="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                        <span class="material-icons-round text-primary text-xs">auto_awesome</span>
+                        Kết quả chụp
+                    </h3>
+                    <div class="flex items-center gap-2">
+                        <button id="previewBtn" onclick="showPreview()"
+                            class="hidden items-center gap-1 bg-blue-500 hover:bg-blue-600 text-white text-[10px] font-bold py-1.5 px-3 rounded-full shadow-md transition-all uppercase tracking-tighter">
+                            <span class="material-icons-round text-sm">visibility</span>
+                            Xem trước
+                        </button>
+                        <button id="mergeBtn" onclick="mergeAndSave()"
+                            class="hidden items-center gap-1 bg-green-500 hover:bg-green-600 text-white text-[10px] font-bold py-1.5 px-3 rounded-full shadow-md transition-all uppercase tracking-tighter">
+                            <span class="material-icons-round text-sm">save_alt</span>
+                            Lưu ngay
+                        </button>
+                        <button onclick="clearAllPhotos()"
+                            class="text-[10px] text-red-500 hover:text-red-600 font-bold uppercase tracking-tighter flex items-center gap-1 transition-colors">
+                            <span class="material-icons-round text-sm">delete_sweep</span>
+                            Xóa hết
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Slot Container dynamically filled by JS -->
+                <div class="grid gap-3" id="photo-grid">
+                    <!-- JS will inject slots và điều khiển grid-cols -->
+                </div>
+            </div>
+        </div>
+
+        <footer
+            class="bg-gray-50 dark:bg-gray-800/50 p-4 border-t border-border-light dark:border-border-dark text-center">
+            <p class="text-[10px] uppercase tracking-widest text-gray-400 dark:text-gray-500 font-bold">© 2026 Photobook
+                Studio • Premium Experience</p>
+        </footer>
+    </main>
+
+    <!-- Canvas hidden for processing -->
+    <canvas id="canvas" class="hidden"></canvas>
+
+    <!-- Dark Mode Toggle -->
+    <button
+        class="fixed bottom-6 right-6 p-4 rounded-full bg-white dark:bg-gray-800 text-gray-800 dark:text-yellow-400 shadow-2xl border border-gray-200 dark:border-gray-700 hover:scale-110 active:scale-95 transition-all focus:outline-none z-50 group"
+        onclick="document.documentElement.classList.toggle('dark')">
+        <span class="material-icons-round dark:hidden text-2xl">dark_mode</span>
+        <span class="material-icons-round hidden dark:block text-2xl">light_mode</span>
+        <span
+            class="absolute right-full mr-3 px-2 py-1 bg-gray-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Chế
+            độ sáng/tối</span>
+    </button>
+
+    <!-- Preview Modal -->
+    <div id="previewModal"
+        class="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] hidden flex-items-center justify-center p-4">
+        <div class="bg-card-light dark:bg-card-dark rounded-2xl max-w-md w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl scale-95 opacity-0 transition-all duration-300 transform"
+            id="modalContent">
+            <div class="p-4 border-b border-border-light dark:border-border-dark flex justify-between items-center">
+                <h4 class="font-bold flex items-center gap-2">
+                    <span class="material-icons-round text-primary">auto_awesome</span>
+                    Ảnh mẫu Photostrip
+                </h4>
+                <button onclick="closePreview()"
+                    class="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
+                    <span class="material-icons-round">close</span>
+                </button>
+            </div>
+            <div class="flex-grow overflow-auto p-6 bg-gray-100 dark:bg-gray-900 flex justify-center">
+                <img id="previewImage" class="max-w-full h-auto shadow-lg rounded-sm" src="" alt="Preview">
+            </div>
+            <div class="p-4 border-t border-border-light dark:border-border-dark flex gap-3">
+                <button onclick="closePreview()"
+                    class="flex-1 py-3 rounded-xl bg-gray-200 dark:bg-gray-700 font-bold text-sm uppercase">Đóng</button>
+                <button onclick="mergeAndSave()"
+                    class="flex-1 py-3 rounded-xl btn-gradient text-white font-bold text-sm uppercase flex items-center justify-center gap-2">
+                    <span class="material-icons-round text-lg">save_alt</span>
+                    Lưu Ảnh
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/camera.js"></script>
+</body>
+
+</html>
